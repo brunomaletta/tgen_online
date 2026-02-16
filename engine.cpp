@@ -120,12 +120,20 @@ static std::vector<std::string> split_args(std::string s){
 	return r;
 }
 
+inline bool first_run = true;
+
 extern "C" EMSCRIPTEN_KEEPALIVE const char* run(const char* code) {
+
+	if (first_run) {
+		char* argv[] = {(char*)"./executable", nullptr};
+		tgen::register_gen(1, argv);
+		first_run = false;
+	}
+
 	captured.clear();
 	std::string src(code);
 
 	try{
-
 		auto start=src.find("tgen::");
 		auto end=src.rfind(".gen()");
 		if(start==std::string::npos||end==std::string::npos)
@@ -152,7 +160,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE const char* run(const char* code) {
 			auto m_end=expr.find("(",pos);
 			std::string method=expr.substr(pos,m_end-pos);
 
-			captured += "method: " + method + "\n";
+			//captured += "method: " + method + "\n";
 
 			auto a_end=expr.find(")",m_end);
 			auto margs=split_args(expr.substr(m_end+1,a_end-m_end-1));
@@ -167,6 +175,4 @@ extern "C" EMSCRIPTEN_KEEPALIVE const char* run(const char* code) {
 	}
 
 	return captured.c_str();
-
 }
-

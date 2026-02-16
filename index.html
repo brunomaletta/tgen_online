@@ -64,6 +64,16 @@ box-sizing:border-box;
 margin-left:32px;
 }
 
+.code-line{
+color:#dcdcaa;
+margin:6px 0;
+}
+
+.spacer{
+height:12px;
+}
+
+
 </style>
 </head>
 
@@ -71,28 +81,43 @@ margin-left:32px;
 
 <h2>tgen playground</h2>
 
-<div class="editor">
-<span class="keyword">#include</span> &lt;iostream&gt;<br>
-<br>
 
+
+<div class="editor">
+
+<span class="keyword">#include</span> <iostream><br>
+<br>
 <span class="keyword">#include</span> "tgen.h";<br><br>
 
 <span class="keyword">int</span> main() {<br>
 
 <div class="codebody">
+
+<div class="code-line">std::cout &lt;&lt;</div>
+
+<div class="spacer"></div>
+
 <textarea id="code">
-std::cout <<
-    tgen::sequence<int>(12,1,10)
-    .equal_range(0,3)
-    .distinct({0,4})
-    .gen()
-<< std::endl;
+tgen::sequence<int>(12,1,10)
+.equal_range(0,3)
+.distinct({0,4})
+.gen()
 </textarea>
+
+<div class="spacer"></div>
+
+<div class="code-line">&emsp;&emsp;&emsp;&emsp;&lt;&lt; std::endl;</div>
+
 </div>
 
 }
 
 </div>
+
+
+
+
+
 
 <button onclick="run()">Run ▶</button>
 

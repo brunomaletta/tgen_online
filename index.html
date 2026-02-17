@@ -118,23 +118,68 @@ tgen::sequence<int>(12,1,10)
 
 
 
-
-<button onclick="run()">Run ▶</button>
-
 <div id="out" class="output"></div>
 
-<script src="engine.js"></script>
-
 <script>
-Module.onRuntimeInitialized=()=>{
-window.run=function(){
-    const code=document.getElementById("code").value;
-    document.getElementById("out").textContent="Running...";
-    const r=Module.ccall("run","string",["string"],[code]);
-    document.getElementById("out").textContent = r || "(no output)"
-};
-};
+if (!window.__TGEN_ENGINE_LOADING__) {
+    window.__TGEN_ENGINE_LOADING__ = true;
+
+    let editor = null;
+    let out = null;
+    let timer = null;
+    let lastCode = null;
+    let wasmReady = false;
+
+    window.Module = {
+        noInitialRun: true,
+        onRuntimeInitialized() {
+            wasmReady = true;
+
+            editor = document.getElementById("code");
+            out = document.getElementById("out");
+
+            editor.addEventListener("input", scheduleRun);
+            execute();
+        }
+    };
+
+    const script = document.createElement("script");
+    script.src = "engine.js?v=" + Date.now(); // bypass cache
+    document.body.appendChild(script);
+
+    function execute() {
+        if (!wasmReady) return;
+
+        const code = editor.value;
+        if (code === lastCode) return;
+        lastCode = code;
+
+        out.textContent = "Running...";
+
+        try {
+            const result = Module.ccall(
+                "run",
+                "string",
+                ["string"],
+                [code]
+            );
+            out.textContent = result || "";
+        } catch (e) {
+            console.error(e);
+            out.textContent = "Engine error";
+        }
+    }
+
+    function scheduleRun() {
+        clearTimeout(timer);
+        timer = setTimeout(execute, 350);
+    }
+
+    window.run = execute;
+}
 </script>
+
+
 
 </body>
 </html>

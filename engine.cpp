@@ -230,10 +230,10 @@ inline bool first_run = true;
 extern "C" EMSCRIPTEN_KEEPALIVE const char* run(const char* code) {
 
 	if (first_run) {
-		char* argv[] = {(char*)"./executable", nullptr};
-		tgen::register_gen(1, argv);
 		first_run = false;
 	}
+	char* argv[] = {(char*)"./executable", nullptr};
+	tgen::register_gen(1, argv);
 
 	captured.clear();
 	std::string src(code);

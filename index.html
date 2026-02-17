@@ -13,22 +13,50 @@ body{
     padding:30px;
 }
 .editor{
-    background:#252526;
-    border-radius:10px;
-    padding:15px;
-    box-shadow:0 0 20px #0008;
-    position: relative;   /* <-- IMPORTANT */
+	    position:relative;   /* IMPORTANT: anchor for absolute children */
+    background:#1e1e1e;
+    border:1px solid #3c3c3c;
+    border-radius:14px;
+    padding:18px 18px 20px 18px;
+    box-shadow:
+        0 10px 30px #00000055,
+        inset 0 0 0 1px #ffffff05;
+    transition:all .18s ease;
 }
+
+.editor::before{
+    content:"";
+    display:block;
+    height:1px;
+    background:linear-gradient(to right, transparent, #ffffff18, transparent);
+    margin:-6px 0 12px 0;
+}
+
+
+/* subtle highlight when interacting */
+.editor:focus-within{
+    border-color:#0e639c;
+    box-shadow:
+        0 12px 32px #00000066,
+        0 0 0 1px #0e639c,
+        0 0 18px #0e639c33,
+        inset 0 0 0 1px #ffffff08;
+}
+
 textarea{
     width:100%;
     height:260px;
-    background:#1e1e1e;
+    background:transparent;        /* important */
     color:#9cdcfe;
     border:none;
     outline:none;
     resize:none;
-    font-size:14px;
+    font-size:16px;
+    box-sizing:border-box;
+    font-family:Consolas, monospace;
+    line-height:1.45;
 }
+
 button{
     margin-top:15px;
     padding:10px 20px;
@@ -49,42 +77,79 @@ button:hover{background:#1177bb;}
     white-space:pre-wrap;
 }
 .keyword{color:#569cd6;}
-textarea{
-width:100%;
-height:260px;
-background:#1e1e1e;
-color:#9cdcfe;
-border:none;
-outline:none;
-resize:none;
-font-size:14px;
-box-sizing:border-box;
-}
-
-.codebody{
-margin-left:32px;
-}
-
-.code-line{
-color:#dcdcaa;
-margin:6px 0;
-}
 
 .spacer{
 height:12px;
 }
 
-#stringBoxContainer {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    z-index: 1000;
+.codebody{
+    margin-left:28px;
+    margin-top:6px;
 }
 
-#stringBox {
-    padding: 6px 10px;
-    font-size: 16px;
-    width: 180px;
+.code-line{
+    color:#dcdcaa;
+    margin:4px 0;
+    display:flex;
+    align-items:center;
+    width:100%;
+}
+
+/* the badge */
+#stringBoxContainer{
+    position:absolute;
+    right:14px;
+    top:18px;                 /* equals editor padding-top */
+    height:20px;              /* first line height */
+    display:flex;
+    align-items:center;       /* vertical centering */
+}
+
+#stringBox{
+        top:8px;      /* was 12px — align to first line */
+	position: relative;
+    background:#252526;
+        color:#4fc1ff;              /* VSCode identifier blue */
+    border:1px solid #3c3c3c;
+    border-radius:7px;
+    padding:4px 8px;
+    font-family:Consolas, monospace;
+    font-size:14px;
+    width:210px;
+    outline:none;
+    transition:.15s;
+}
+
+#stringBox{
+    position:relative;
+    top:1px;
+}
+
+#stringBox:focus{
+    border-color:#0e639c;
+    box-shadow:0 0 0 1px #0e639c, 0 0 6px #0e639c44;
+}
+
+
+
+.argline{
+    display:flex;
+    align-items:center;
+    justify-content:space-between; /* pushes input to the right */
+    gap:10px;
+}
+
+.argline input{
+    margin-left:auto;   /* THIS moves it to the right */
+}
+
+/* subtle IDE-style label */
+.argLabel{
+    color:#6a9955;          /* comment green */
+    font-size:12.5px;
+    font-family:Consolas, monospace;
+    opacity:0.9;
+    user-select:none;
 }
 
 
@@ -101,7 +166,8 @@ height:12px;
 <div class="editor">
 
 <div id="stringBoxContainer">
-    <input id="stringBox" type="text" value="./a.out" />
+	<span class="argLabel">Args:&emsp;</span>
+	<input id="stringBox" type="text" value="./a.out" />
 </div>
 
 <span class="keyword">#include</span> <iostream><br>
@@ -112,22 +178,26 @@ height:12px;
 
 <div class="codebody">
 
-<div class="code-line">std::cout &lt;&lt;</div>
+    <div class="code-left">
 
-<div class="spacer"></div>
+        <div class="code-line">std::cout &lt;&lt;</div>
 
-<textarea id="code">
+        <div class="spacer"></div>
+
+        <textarea id="code">
 tgen::sequence<int>(12,1,10)
 .equal_range(0,3)
 .distinct({0,4})
-.gen()
-</textarea>
+.gen()</textarea>
 
-<div class="spacer"></div>
+        <div class="spacer"></div>
 
-<div class="code-line">&emsp;&emsp;&emsp;&emsp;&lt;&lt; std::endl;</div>
+        <div class="code-line">&emsp;&emsp;&emsp;&emsp;&lt;&lt; std::endl;</div>
+
+    </div>
 
 </div>
+
 
 }
 

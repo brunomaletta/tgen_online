@@ -9,6 +9,63 @@
 
 #include "tgen/src/tgen.h"
 
+static std::vector<std::string> split_args_(const std::string& s)
+{
+    std::vector<std::string> out;
+    std::string cur;
+
+    bool in_quotes = false;
+
+    for (size_t i = 0; i < s.size(); ++i)
+    {
+        char c = s[i];
+
+        if (c == '"') {
+            in_quotes = !in_quotes;
+            continue;
+        }
+
+        if (!in_quotes && std::isspace((unsigned char)c)) {
+            if (!cur.empty()) {
+                out.push_back(cur);
+                cur.clear();
+            }
+        }
+        else {
+            cur += c;
+        }
+    }
+
+    if (!cur.empty())
+        out.push_back(cur);
+
+    return out;
+}
+
+void string_to_argv(const std::string& cmd, int& argc, char**& argv)
+{
+    auto tokens = split_args_(cmd);
+
+    argc = (int)tokens.size();
+    argv = new char*[argc + 1];
+
+    for (int i = 0; i < argc; ++i)
+    {
+        argv[i] = new char[tokens[i].size() + 1];
+        std::strcpy(argv[i], tokens[i].c_str());
+    }
+
+    argv[argc] = nullptr;
+}
+
+void free_argv(int argc, char** argv)
+{
+    for (int i = 0; i < argc; ++i)
+        delete[] argv[i];
+
+    delete[] argv;
+}
+
 static std::string captured;
 
 /* ================= Runtime Object ================= */
@@ -225,22 +282,27 @@ static std::vector<std::string> split_args(std::string s) {
 	return r;
 }
 
-inline bool first_run = true;
+inline bool updated = false;
+inline std::string tgen_args, last_code;
 
 extern "C" EMSCRIPTEN_KEEPALIVE const char* run(const char* code) {
 
-	if (first_run) {
-		first_run = false;
-	}
-	char* argv[] = {(char*)"./executable", nullptr};
-	tgen::register_gen(1, argv);
+	if (updated and code == last_code) return captured.c_str();
+	updated = true;
+	last_code = code;
+
+	int argc;
+	char** argv;
+	string_to_argv(tgen_args, argc, argv);
+	tgen::register_gen(argc, argv);
+	free_argv(argc, argv);
 
 	captured.clear();
 	std::string src(code);
 
 	try {
 		auto start = src.find("tgen::");
-		if (start == std::string::npos) throw std::runtime_error("not a tgen method");
+		if (start == std::string::npos) throw std::runtime_error("not a tgen:: method");
 		auto end = src.size();
 
 		std::string expr = src.substr(start, end-start+6);
@@ -279,4 +341,11 @@ extern "C" EMSCRIPTEN_KEEPALIVE const char* run(const char* code) {
 	}
 
 	return captured.c_str();
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE void set_input_string(const char* str) {
+    std::string s(str);
+    // store globally, or recompute algorithm
+	tgen_args = s;
+	updated = false;
 }

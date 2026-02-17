@@ -17,6 +17,7 @@ body{
     border-radius:10px;
     padding:15px;
     box-shadow:0 0 20px #0008;
+    position: relative;   /* <-- IMPORTANT */
 }
 textarea{
     width:100%;
@@ -73,6 +74,20 @@ margin:6px 0;
 height:12px;
 }
 
+#stringBoxContainer {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 1000;
+}
+
+#stringBox {
+    padding: 6px 10px;
+    font-size: 16px;
+    width: 180px;
+}
+
+
 
 </style>
 </head>
@@ -84,6 +99,10 @@ height:12px;
 
 
 <div class="editor">
+
+<div id="stringBoxContainer">
+    <input id="stringBox" type="text" value="./a.out" />
+</div>
 
 <span class="keyword">#include</span> <iostream><br>
 <br>
@@ -121,6 +140,7 @@ tgen::sequence<int>(12,1,10)
 <div id="out" class="output"></div>
 
 <script>
+
 if (!window.__TGEN_ENGINE_LOADING__) {
     window.__TGEN_ENGINE_LOADING__ = true;
 
@@ -129,6 +149,7 @@ if (!window.__TGEN_ENGINE_LOADING__) {
     let timer = null;
     let lastCode = null;
     let wasmReady = false;
+    let setString = null;   // <-- NEW
 
     window.Module = {
         noInitialRun: true,
@@ -138,37 +159,62 @@ if (!window.__TGEN_ENGINE_LOADING__) {
             editor = document.getElementById("code");
             out = document.getElementById("out");
 
+            // --- CONNECT C++ FUNCTIONS ---
+            setString = Module.cwrap(
+                "set_input_string",
+                null,
+                ["string"]
+            );
+
+            // textbox hookup
+            const input = document.getElementById("stringBox");
+            input.addEventListener("input", () => {
+                setString(input.value);
+                execute(); // rerun code when argument changes
+            });
+
+            // send initial value
+            setString(input.value);
+
+            // existing editor behavior
             editor.addEventListener("input", scheduleRun);
+
             execute();
         }
     };
 
     const script = document.createElement("script");
-    script.src = "engine.js?v=" + Date.now(); // bypass cache
+    script.src = "engine.js?v=" + Date.now();
     document.body.appendChild(script);
+	let lastArg = null;
 
-    function execute() {
-        if (!wasmReady) return;
+	function execute() {
+		if (!wasmReady) return;
 
-        const code = editor.value;
-        if (code === lastCode) return;
-        lastCode = code;
+		const code = editor.value;
+		const arg  = document.getElementById("stringBox").value;
 
-        out.textContent = "Running...";
+		if (code === lastCode && arg === lastArg) return;
 
-        try {
-            const result = Module.ccall(
-                "run",
-                "string",
-                ["string"],
-                [code]
-            );
-            out.textContent = result || "";
-        } catch (e) {
-            console.error(e);
-            out.textContent = "Engine error";
-        }
-    }
+		lastCode = code;
+		lastArg = arg;
+
+		out.textContent = "Running...";
+
+		try {
+			const result = Module.ccall(
+				"run",
+				"string",
+				["string"],
+				[code]
+			);
+			out.textContent = result || "";
+		} catch (e) {
+			console.error(e);
+			out.textContent = "Engine error";
+		}
+	}
+
 
     function scheduleRun() {
         clearTimeout(timer);
@@ -177,7 +223,9 @@ if (!window.__TGEN_ENGINE_LOADING__) {
 
     window.run = execute;
 }
+
 </script>
+
 
 
 
